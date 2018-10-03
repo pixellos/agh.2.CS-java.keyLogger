@@ -9,8 +9,8 @@ import java.util.prefs.Preferences;
 public class Main {
     public static void main(String[] args) {
         var gkl = new GlobalKeyListener();
-
-        var ep = new ClientEntryPoint(new ClientPreferences(), new ApiClient("http://localhost:8080/"), gkl );
+        var baseUrl = args.length == 0 ? "http://localhost:8080/" : args[0];
+        var ep = new ClientEntryPoint(new ClientPreferences(), new ApiClient(baseUrl), gkl, baseUrl);
         Main.RegisterHook(gkl);
         ep.Run();
     }

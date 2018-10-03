@@ -1,5 +1,7 @@
 import com.google.gson.Gson;
 
+import java.util.Date;
+
 import static spark.Spark.path;
 import static spark.Spark.post;
 
@@ -14,7 +16,7 @@ public class ClientController {
     }
 
     public void RegisterPaths() {
-        var g = new Gson();
+        var g = DateGson.Get();
         path("/client", () -> {
             post("/report/key", (req, res) -> {
                 var body = req.body();
@@ -28,7 +30,7 @@ public class ClientController {
                 if(user != null)
                 {
                     var email = user.getEmails().get(0).getValue();
-                    this.DatabaseClient.LogUserKeyPress(email, erm.Key);
+                    this.DatabaseClient.LogUserKeyPress(email, erm.Key, erm.Date);
                     System.out.println("Key " + erm.Key + " was hit on client with id " + erm.ApiKey + ".");
                 }
 
@@ -48,9 +50,9 @@ public class ClientController {
                 var response = new AuthorizeResponseModel();
 
                 if (user != null) {
-                    response.apiKey = key;
-                    response.email = user.getEmails().get(0).getValue();
-                    response.name =  user.getDisplayName();
+                    response.ApiKey = key;
+                    response.Email = user.getEmails().get(0).getValue();
+                    response.Name =  user.getDisplayName();
                     return g.toJson(response);
                 }
                 return "";

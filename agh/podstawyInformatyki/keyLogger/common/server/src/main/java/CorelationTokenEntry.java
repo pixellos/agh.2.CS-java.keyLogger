@@ -10,5 +10,5 @@ public class CorelationTokenEntry{
     public String GoogleApiKey;
 
     @DatabaseField(canBeNull = false)
-    public String CorelationToken;
+    public String CorrelationToken;
 }

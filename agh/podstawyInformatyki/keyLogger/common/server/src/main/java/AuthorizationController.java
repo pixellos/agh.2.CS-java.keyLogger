@@ -3,7 +3,6 @@ import com.google.api.client.auth.oauth2.AuthorizationCodeResponseUrl;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.plus.Plus;
 import com.google.api.services.plus.model.Person;
 import com.google.gson.Gson;
 import spark.Request;
@@ -12,22 +11,32 @@ import spark.Response;
 import java.io.IOException;
 import java.util.*;
 
-public class AuthorizationController{
+import static spark.Spark.*;
+
+
+public class AuthorizationController {
 
     private static final String SESSION_NAME = "username";
     private static final String CHARS = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ234567890";
     private static Random Random;
     private final GoogleClient GoogleClient;
 
-    private Dictionary<UUID, SessionData> Sessions ;
+    private Dictionary<UUID, SessionData> Sessions;
     private DatabaseClient DatabaseClient;
 
-    public AuthorizationController(DatabaseClient dc, GoogleClient gc)
-    {
+    public AuthorizationController(DatabaseClient dc, GoogleClient gc) {
         this.DatabaseClient = dc;
         this.GoogleClient = gc;
         this.Sessions = new Hashtable<>();
         this.Random = new Random();
+    }
+
+    public void RegisterPaths()
+    {
+        get("/login", (req, res) -> this.Authorize(req, res));
+        get("/login/status", (req, res) -> this.GetLoginState(req, res));
+        get("/oauth/google/callback", (req, res) -> this.OnAuthorizationCallback(req, res));
+        get("/logs", (req, res) -> this.UserEntries(req, res));
     }
 
     public String Authorize(Request request, Response response) {
@@ -50,37 +59,41 @@ public class AuthorizationController{
         return "";
     }
 
-    private SessionData SetSession(Request request)
-    {
+    public String UserEntries(Request request, Response response) {
+        var session = this.GetSession(request);
+        if (session != null) {
+            var person = this.GoogleClient.GetPerson(session.AccessCode);
+            var s = this.DatabaseClient.GetLogs(person.getEmails().get(0).getValue()).stream();
+            return  KeyLogsEntry.ToHtmlString(s);
+        }
+        return "Bad session, go to /login to authorize.";
+    }
+
+    private SessionData GetSession(Request request) {
         var session = request.session().attribute(SESSION_NAME);
-        if(session != null)
-        {
+        if (session != null) {
             return this.Sessions.get(session);
         }
         return null;
     }
 
-    private void SetSession(Request request, String accessCode)
-    {
+    private void SetSession(Request request, String accessCode) {
         Person person = this.GoogleClient.GetPerson(accessCode);
 
-        if(person != null)
-        {
+        if (person != null) {
             var guid = UUID.randomUUID();
             request.session().attribute(SESSION_NAME, guid);
             var sessionObject = new SessionData();
             sessionObject.email = person.getEmails().get(0).getValue();
-            sessionObject.code = accessCode;
+            sessionObject.AccessCode = accessCode;
             this.Sessions.put(guid, sessionObject);
         }
     }
 
-
-
     public String GetLoginState(Request request, Response response) {
-        var session = this.SetSession(request);
-            var gson = new Gson();
-            return gson.toJson(session);
+        var session = this.GetSession(request);
+        var gson = DateGson.Get();
+        return gson.toJson(session);
     }
 
 
@@ -91,9 +104,8 @@ public class AuthorizationController{
         }
         return token.toString();
     }
-    
-    public String OnAuthorizationCallback(Request request, Response response)
-    {
+
+    public String OnAuthorizationCallback(Request request, Response response) {
         var r = request.raw().getRequestURL().toString() + "?" + request.raw().getQueryString();
         var codeResponse = new AuthorizationCodeResponseUrl(r);
         var jf = JacksonFactory.getDefaultInstance();
@@ -104,19 +116,19 @@ public class AuthorizationController{
         coll.add("https://www.googleapis.com/auth/plus.login");
         coll.add("profile");
         coll.add("email");
-        var rs  = new GoogleAuthorizationCodeTokenRequest(
+        var rs = new GoogleAuthorizationCodeTokenRequest(
                 net,
                 jf,
                 "480347143153-k0q7pdjdsb67tom36vpi4jaesct5cpd3.apps.googleusercontent.com",
                 "NkRWXwq4VnD1Ob3MDhe2tfzf",
                 codeResponse.getCode(),
-                "http://localhost:8080/oauth/google/callback" );
+                "http://localhost:8080/oauth/google/callback");
         try {
             var res = rs.execute();
             var corelationToken = this.getToken(5);
-            this.DatabaseClient.SaveCorelationToken(res.getAccessToken(),corelationToken);
-            this.SetSession(request,res.getAccessToken());
-            return "Hi, you are authorized to use this app, copy this code: '" + corelationToken + "'";
+            this.DatabaseClient.SaveCorelationToken(res.getAccessToken(), corelationToken);
+            this.SetSession(request, res.getAccessToken());
+            return "Hi, you are authorized to use this app, copy this AccessCode: '" + corelationToken + "'";
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -5,6 +5,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Date;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ApiClient {
 
@@ -15,28 +20,25 @@ public class ApiClient {
     public ApiClient(String baseUrl) {
         this.BaseUrl = baseUrl;
         this.Client = HttpClient.newHttpClient();
-        this.Gson = new Gson();
-
+        this.Gson = DateGson.Get();
     }
 
     public void Report(String key, String apiKey) {
+        if(apiKey == null || apiKey.isEmpty())
+        {
+            return;
+        }
         var reportPath = "client/report/key";
         var erm = new EventRequestModel();
         erm.Key = key;
         erm.ApiKey = apiKey;
-
+        erm.Date = new Date();
         var parameter = this.Gson.toJson(erm);
         var request = HttpRequest.newBuilder().uri(URI.create(this.BaseUrl + reportPath))
                 .POST(HttpRequest.BodyPublishers.ofString(parameter))
                 .build();
 
-        try {
-            this.Client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        var send = this.Client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
     }
 
     public User Authorize(String apiKey) {
@@ -58,12 +60,12 @@ public class ApiClient {
             }
             var response = this.Gson.fromJson(responseJson, AuthorizeResponseModel.class);
 
-            if (response != null && response.apiKey != null) {
+            if (response != null && response.ApiKey != null) {
                 result = new User();
                 result.Authorized = true;
-                result.Name = response.name;
-                result.ApiKey = response.apiKey;
-                result.Name = response.name;
+                result.Name = response.Name;
+                result.ApiKey = response.ApiKey;
+                result.Name = response.Name;
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

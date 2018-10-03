@@ -1,4 +1,4 @@
 public class SessionData {
-    public String code;
+    public String AccessCode;
     public String email;
 }

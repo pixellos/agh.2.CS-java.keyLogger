@@ -17,7 +17,7 @@ public class Main {
         port(8080);
         ipAddress("127.0.0.1");
         Spark.before((request, response) -> {
-            // Todo: Add user request loging
+            // Todo: Add user request logging
         });
         var dc = new DatabaseClient();
         var gc = new GoogleClient();
@@ -27,11 +27,10 @@ public class Main {
         var cc = new ClientController(dc, gc);
 
         cc.RegisterPaths();
+        ac.RegisterPaths();
 
-        get("/list", (req, res) -> dc.GetLogs().stream().map(x -> "Id: " + x.Id + ", Email: " + x.UserEmail  + " Key: " + x.Key + " Stamp:" + x.TimeStamp.toLocalDateTime().format(DateTimeFormatter.ISO_DATE_TIME)).collect(java.util.stream.Collectors.joining("<br/>")));
-        get("/login", (req, res) -> ac.Authorize(req, res));
-        get("/login/status", (req, res) -> ac.GetLoginState(req, res));
-        get("/oauth/google/callback", (req, res) -> ac.OnAuthorizationCallback(req, res));
+        get("/list/admin", (req, res) -> KeyLogsEntry.ToHtmlString(dc.GetLogs().stream()));
+
     }
 }
 
