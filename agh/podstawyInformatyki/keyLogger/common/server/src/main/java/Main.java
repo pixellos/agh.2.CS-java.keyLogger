@@ -14,8 +14,10 @@ public class Main {
     public static String AccessToken = "";
 
     public static void main(String[] args) {
-        port(8080);
-        ipAddress("127.0.0.1");
+        secure("server/src/cert/keystore.jks", "PASSWORD", null,null);
+        var baseUrl ="popmatt.eu";
+        ipAddress(baseUrl);
+        port(443);
         Spark.before((request, response) -> {
             // Todo: Add user request logging
         });
@@ -23,8 +25,8 @@ public class Main {
         var gc = new GoogleClient();
         dc.Initialize();
 
-        var ac = new AuthorizationController(dc, gc);
-        var cc = new ClientController(dc, gc);
+        var ac = new AuthorizationController(dc, gc, baseUrl);
+        var cc = new ClientController(dc, gc, baseUrl);
 
         cc.RegisterPaths();
         ac.RegisterPaths();

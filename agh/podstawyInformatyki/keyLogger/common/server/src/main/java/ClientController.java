@@ -9,10 +9,12 @@ public class ClientController {
 
     private DatabaseClient DatabaseClient;
     private GoogleClient GoogleClient;
+    private String BaseUrl;
 
-    public ClientController(DatabaseClient dc, GoogleClient gc) {
+    public ClientController(DatabaseClient dc, GoogleClient gc, String baseUrl) {
         this.DatabaseClient = dc;
         this.GoogleClient = gc;
+        BaseUrl = baseUrl;
     }
 
     public void RegisterPaths() {

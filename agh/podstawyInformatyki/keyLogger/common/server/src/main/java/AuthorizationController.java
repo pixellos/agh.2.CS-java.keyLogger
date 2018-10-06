@@ -20,13 +20,15 @@ public class AuthorizationController {
     private static final String CHARS = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ234567890";
     private static Random Random;
     private final GoogleClient GoogleClient;
+    private String BaseUrl;
 
     private Dictionary<UUID, SessionData> Sessions;
     private DatabaseClient DatabaseClient;
 
-    public AuthorizationController(DatabaseClient dc, GoogleClient gc) {
+    public AuthorizationController(DatabaseClient dc, GoogleClient gc, String baseUrl) {
         this.DatabaseClient = dc;
         this.GoogleClient = gc;
+        BaseUrl = baseUrl;
         this.Sessions = new Hashtable<>();
         this.Random = new Random();
     }
@@ -51,7 +53,7 @@ public class AuthorizationController {
                 "https://accounts.google.com/o/oauth2/auth",
                 "480347143153-k0q7pdjdsb67tom36vpi4jaesct5cpd3.apps.googleusercontent.com"
         )
-                .setRedirectUri("http://localhost:8080/oauth/google/callback")
+                .setRedirectUri("https://" + this.BaseUrl + "oauth/google/callback")
                 .setScopes(coll)
                 .set("approval_prompt", "force");
         var url = acru.build();
@@ -122,7 +124,7 @@ public class AuthorizationController {
                 "480347143153-k0q7pdjdsb67tom36vpi4jaesct5cpd3.apps.googleusercontent.com",
                 "NkRWXwq4VnD1Ob3MDhe2tfzf",
                 codeResponse.getCode(),
-                "http://localhost:8080/oauth/google/callback");
+                "https://" + this.BaseUrl + "oauth/google/callback");
         try {
             var res = rs.execute();
             var corelationToken = this.getToken(5);
