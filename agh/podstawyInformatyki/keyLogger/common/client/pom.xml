@@ -47,6 +47,12 @@
             <artifactId>jnativehook</artifactId>
             <version>2.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>pixellos</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 

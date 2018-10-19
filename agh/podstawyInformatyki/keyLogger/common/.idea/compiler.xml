@@ -7,12 +7,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="client" />
+        <module name="common" />
         <module name="server" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="agh.podstawyInformatyki.keyLogger.common" target="10" />
       <module name="client" target="11" />
+      <module name="common" target="10" />
       <module name="server" target="11" />
     </bytecodeTargetLevel>
   </component>
