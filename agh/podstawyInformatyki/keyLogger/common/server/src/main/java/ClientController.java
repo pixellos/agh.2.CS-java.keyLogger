@@ -10,11 +10,13 @@ public class ClientController {
     private DatabaseClient DatabaseClient;
     private GoogleClient GoogleClient;
     private String BaseUrl;
+    private String Schema;
 
-    public ClientController(DatabaseClient dc, GoogleClient gc, String baseUrl) {
+    public ClientController(DatabaseClient dc, GoogleClient gc, String baseUrl, String schema) {
         this.DatabaseClient = dc;
         this.GoogleClient = gc;
         BaseUrl = baseUrl;
+        Schema = schema;
     }
 
     public void RegisterPaths() {
@@ -51,13 +53,10 @@ public class ClientController {
                 }
                 var response = new AuthorizeResponseModel();
 
-                if (user != null) {
-                    response.ApiKey = key;
-                    response.Email = user.getEmails().get(0).getValue();
-                    response.Name =  user.getDisplayName();
-                    return g.toJson(response);
-                }
-                return "";
+                response.ApiKey = key;
+                response.Email = user.getEmails().get(0).getValue();
+                response.Name =  user.getDisplayName();
+                return g.toJson(response);
             });
         });
     }

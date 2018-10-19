@@ -27,7 +27,6 @@
             <groupId>pixellos</groupId>
             <artifactId>agh.podstawyInformatyki.keyLogger.common</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.sparkjava</groupId>

@@ -4,16 +4,16 @@ import org.jnativehook.keyboard.NativeKeyListener;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.Preferences;
 
 public class Main {
     public static void main(String[] args) {
         var gkl = new GlobalKeyListener();
-        var baseUrl = args.length == 0 ? "https://localhost:8080/" : args[0];
+        var baseUrl = args.length == 0 ? "http://127.0.0.1:8080/" : args[0];
         var ep = new ClientEntryPoint(new ClientPreferences(), new ApiClient(baseUrl), gkl, baseUrl);
         Main.RegisterHook(gkl);
         ep.Run();
     }
+
 
     public static void RegisterHook(NativeKeyListener nkl) {
         Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
