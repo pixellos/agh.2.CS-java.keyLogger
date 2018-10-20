@@ -73,7 +73,7 @@ public class AuthorizationController {
         return "Bad session, go to /login to authorize.";
     }
 
-    private SessionData GetSession(Request request) {
+    public SessionData GetSession(Request request) {
         var session = request.session().attribute(SESSION_NAME);
         if (session != null) {
             return this.Sessions.get(session);
@@ -99,7 +99,6 @@ public class AuthorizationController {
         var gson = DateGson.Get();
         return gson.toJson(session);
     }
-
 
     private String getToken(int length) {
         StringBuilder token = new StringBuilder(length);

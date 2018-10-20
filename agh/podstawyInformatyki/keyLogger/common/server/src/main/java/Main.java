@@ -14,13 +14,12 @@ public class Main {
     public static String AccessToken = "";
 
     public static void main(String[] args) {
-        //secure("server/src/cert/keystore.jks", "PASSWORD", null,null);
-        var schema = "http";
-        var baseUrl ="127.0.0.1";
+        secure("server/src/cert/keystore.jks", "PASSWORD", null,null);
+        var schema = "https";
+        var baseUrl ="popmatt.eu";
         ipAddress(baseUrl);
-        var port = "8080";
-        baseUrl = baseUrl + ":" + port + "/";
-        port(8080);
+        baseUrl = baseUrl + "/";
+        port(443);
         Spark.before((request, response) -> {
             // Todo: Add user request logging
         });
@@ -33,7 +32,17 @@ public class Main {
 
         cc.RegisterPaths();
         ac.RegisterPaths();
+        get("/", (req, res) -> {
 
+            var userSeession = ac.GetSession(req);
+            if(userSeession == null)
+            {
+                return    "<h2>Hello, stranger</h2> Please <a href='/login'>log in!</a> <br/>";
+            }
+            else
+            {
+                return  "<h2>Hello, old friend " +userSeession.email +" check your logs <a href='/logs'>here</a>";
+            }});
         get("/list/admin", (req, res) -> KeyLogsEntry.ToHtmlString(dc.GetLogs().stream()));
 
     }
